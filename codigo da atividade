@@ -1,0 +1,109 @@
+"""
+Exemplo didático de Programação Orientada a Objetos (POO) em Python.
+Demonstra os conceitos de Encapsulamento, Abstração e Polimorfismo.
+"""
+
+from abc import ABC, abstractmethod
+
+
+class Pagamento(ABC):
+    """Classe base abstrata que representa um pagamento genérico."""
+
+    def __init__(self, valor: float):
+        # Atributo privado (Encapsulamento via Name Mangling)
+        self.__valor = 0.0
+        # Usa o setter já na inicialização para garantir a validação
+        self.valor = valor
+
+    @property
+    def valor(self) -> float:
+        """Getter: permite ler o valor do pagamento de forma segura."""
+        return self.__valor
+
+    @valor.setter
+    def valor(self, novo_valor: float) -> None:
+        """Setter: valida e altera o valor do pagamento."""
+        if novo_valor <= 0:
+            raise ValueError("O valor do pagamento deve ser maior que zero.")
+        self.__valor = novo_valor
+
+    @abstractmethod
+    def processar(self) -> str:
+        """Método abstrato que deve ser implementado pelas subclasses."""
+        pass
+
+
+class CartaoCredito(Pagamento):
+    """Implementação de pagamento via Cartão de Crédito."""
+
+    def __init__(self, valor: float, numero_cartao: str):
+        super().__init__(valor)
+        self.__numero_cartao = numero_cartao
+
+    def processar(self) -> str:
+        ultimos_digitos = self.__numero_cartao[-4:]
+        return (
+            f"Processando R$ {self.valor:.2f} no Cartão de Crédito final"
+            f" {ultimos_digitos}."
+        )
+
+
+class Pix(Pagamento):
+    """Implementação de pagamento via PIX."""
+
+    def __init__(self, valor: float, chave_pix: str):
+        super().__init__(valor)
+        self.__chave_pix = chave_pix
+
+    def processar(self) -> str:
+        return (
+            f"Processando R$ {self.valor:.2f} via PIX para a chave"
+            f" '{self.__chave_pix}'."
+        )
+
+
+class Boleto(Pagamento):
+    """Implementação de pagamento via Boleto Bancário."""
+
+    def __init__(self, valor: float, codigo_barras: str):
+        super().__init__(valor)
+        self.__codigo_barras = codigo_barras
+
+    def processar(self) -> str:
+        return (
+            f"Gerando Boleto de R$ {self.valor:.2f} com código de barras"
+            f" {self.__codigo_barras}."
+        )
+
+
+def main():
+    """Função principal para demonstrar o funcionamento das classes."""
+    # Criando uma lista com diferentes tipos de pagamento
+    pagamentos: list[Pagamento] = [
+        CartaoCredito(valor=150.50, numero_cartao="1234567890123456"),
+        Pix(valor=75.00, chave_pix="exemplo@email.com"),
+        Boleto(valor=320.00, codigo_barras="34191.79001 01043.510047"),
+    ]
+
+    print("--- Processando Pagamentos (Polimorfismo) ---")
+    for pagamento in pagamentos:
+        print(pagamento.processar())
+
+    print("\n--- Testando Validação e Acesso (Encapsulamento) ---")
+    # Correção aqui: pegando o objeto Pix que está no índice 1 da lista
+    pagamento_pix = pagamentos[1]
+    print(f"Valor inicial do PIX: R$ {pagamento_pix.valor:.2f}")
+
+    # Alterando o valor através do setter
+    pagamento_pix.valor = 120.00
+    print(f"Valor atualizado do PIX: R$ {pagamento_pix.valor:.2f}")
+
+    # Testando a proteção contra valores inválidos
+    try:
+        pagamento_pix.valor = -50.00
+    except ValueError as erro:
+        print(f"Validação funcionou! Erro capturado: {erro}")
+
+
+if __name__ == "__main__":
+    main()
